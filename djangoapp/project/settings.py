@@ -31,9 +31,9 @@ DEBUG = bool(int(os.getenv('DEBUG',0)))
 
 #ALLOWED_HOSTS = []
 ALLOWED_HOSTS = [
-    h.strip() for h in os.getenv('ALLOWED_HOSTS','').split()
+    h.strip() for h in os.getenv('ALLOWED_HOSTS', '').split(',')
     if h.strip()
-] 
+]
 
 
 
