@@ -58,7 +58,7 @@ class PostAdmin(SummernoteModelAdmin):
     }
     autocomplete_fields='tags', 'category'
     
-    def save_modeppl(self, request, obj, form, change) -> None:
+    def save_model(self, request, obj, form, change) -> None:
         if change:
             obj.updated_by = request.user 
         else:
