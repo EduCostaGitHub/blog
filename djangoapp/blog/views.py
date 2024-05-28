@@ -7,7 +7,7 @@ from django.db.models import Q
 from django.db.models.query import QuerySet
 from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
-from django.views.generic import ListView
+from django.views.generic import DetailView, ListView
 
 POST_PER_PAGE = 2
 
@@ -249,50 +249,72 @@ class SearchListView(PostListView):
             return redirect('blog:index')
         return super().get(request, *args, **kwargs)
 
-def search(request):
-    search_value =request.GET.get('search', '').strip()
-    posts = (
-        Post.objects.get_published()
-        .filter(
-            Q(title__icontains=search_value) |
-            Q(excerpt__icontains=search_value) |
-            Q(content__icontains=search_value) 
-        )[0:POST_PER_PAGE]
-    ) 
+# def search(request):
+#     search_value =request.GET.get('search', '').strip()
+#     posts = (
+#         Post.objects.get_published()
+#         .filter(
+#             Q(title__icontains=search_value) |
+#             Q(excerpt__icontains=search_value) |
+#             Q(content__icontains=search_value) 
+#         )[0:POST_PER_PAGE]
+#     ) 
 
-    page_title = f'{search_value[:20]} - '
+#     page_title = f'{search_value[:20]} - '
    
-    return render(
-        request,
-        'blog/pages/index.html',
-        {
-            'page_obj' : posts,
-            'search_value': search_value,
+#     return render(
+#         request,
+#         'blog/pages/index.html',
+#         {
+#             'page_obj' : posts,
+#             'search_value': search_value,
+#             'page_title': page_title,
+#         }
+#     )
+
+class PageDetailView(DetailView):
+    model = Page
+    template_name  = 'blog/pages/page.html'
+    slug_field = 'slug'
+    context_object_name='page'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)  
+        page = self.get_object()
+
+        page_title = f'{page.title} - '       # type: ignore       
+        
+        context.update({            
             'page_title': page_title,
-        }
-    )
+        })
 
-
-def page(request, slug):
-    current_page = (
-        Page.objects
-        .filter(is_published=True)
-        .filter(slug=slug)
-        .first()
-        ) 
-    if current_page is None:
-        raise Http404
+        return context
     
-    page_title = f'{current_page.title} - '
+    def get_queryset(self):
+        return super().get_queryset().filter(
+            is_published=True,
+        )
 
-    return render(
-        request,
-        'blog/pages/page.html',
-        {
-            'page':current_page,
-            'page_title': page_title,
-        }
-    )
+# def page(request, slug):
+#     current_page = (
+#         Page.objects
+#         .filter(is_published=True)
+#         .filter(slug=slug)
+#         .first()
+#         ) 
+#     if current_page is None:
+#         raise Http404
+    
+#     page_title = f'{current_page.title} - '
+
+#     return render(
+#         request,
+#         'blog/pages/page.html',
+#         {
+#             'page':current_page,
+#             'page_title': page_title,
+#         }
+#     )
 
 def post(request, slug):
     current_post = (
