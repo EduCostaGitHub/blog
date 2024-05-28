@@ -216,6 +216,39 @@ class TagListView(PostListView):
 #         }
 #     )
 
+class SearchListView(PostListView):
+    def __init__(self, *args, **kwargs):
+        super().__init__( *args, **kwargs)
+        self._search_value = ''
+
+    def setup(self, request, *args, **kwargs):
+        self._search_value = request.GET.get('search','').strip()
+        return super().setup(request, *args, **kwargs)
+    
+    def get_queryset(self):
+        return super().get_queryset().filter(
+            Q(title__icontains=self._search_value) |
+            Q(excerpt__icontains=self._search_value) |
+            Q(content__icontains=self._search_value)             
+        )[0:POST_PER_PAGE]
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)        
+        
+        page_title = f'{self._search_value[:20]} - '
+        
+        context.update({
+            'search_value': self._search_value,
+            'page_title': page_title,
+        })
+
+        return context
+    
+    def get(self, request, *args: Any, **kwargs):
+        if self._search_value == '':
+            return redirect('blog:index')
+        return super().get(request, *args, **kwargs)
+
 def search(request):
     search_value =request.GET.get('search', '').strip()
     posts = (
